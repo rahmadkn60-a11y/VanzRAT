@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "migrate": "wrangler d1 migrations apply vanzrat --remote"
+    "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "wrangler": "^3.80.0"
+    "wrangler": "^4.0.0"
   }
 }
