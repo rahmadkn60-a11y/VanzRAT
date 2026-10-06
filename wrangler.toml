@@ -1,0 +1,27 @@
+name = "vanzrat"
+main = "src/index.js"
+compatibility_date = "2024-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "vanzrat"
+database_id = "REPLACE_D1_ID"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_KV_ID"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "vanzrat"
+
+[[durable_objects.bindings]]
+name = "DEVICE"
+class_name = "DeviceSession"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DeviceSession"]
+
+[vars]
+PANEL_TITLE = "VanzRAT"
