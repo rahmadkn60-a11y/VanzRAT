@@ -128,14 +128,28 @@ export async function handleApiResults(req, env) {
 export async function handleApiFile(req, env) {
   const op = await operatorAuth(req, env);
   if (!op) return json({ error: 'unauthorized' }, 401);
+
   const key = decodeURIComponent(
     new URL(req.url).pathname.replace('/api/op/file/', '')
   );
-  const obj = await env.R2.get(key);
-  if (!obj) return new Response('Not found', { status: 404 });
-  return new Response(obj.body, {
+
+  const b64 = await env.FILES.get(`blob:${key}`);
+  if (!b64) return new Response('Not found', { status: 404 });
+
+  const metaRaw = await env.FILES.get(`meta:${key}`);
+  let contentType = 'application/octet-stream';
+  if (metaRaw) {
+    try {
+      const m = JSON.parse(metaRaw);
+      contentType = m.type || contentType;
+    } catch {}
+  }
+
+  const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return new Response(bin, {
     headers: {
-      'content-type': obj.httpMetadata?.contentType || 'application/octet-stream'
+      'content-type': contentType,
+      'cache-control': 'private, max-age=300'
     }
   });
 }
