@@ -126,22 +126,38 @@ export async function handleUpload(req, env) {
   const label = form.get('label') || 'file';
   if (!file) return json({ error: 'no file' }, 400);
 
-  const key = `${device.id}/${now()}_${label}_${file.name}`;
-  await env.R2.put(key, file.stream(), {
-    httpMetadata: { contentType: file.type || 'application/octet-stream' }
+  const buf = await file.arrayBuffer();
+  const size = buf.byteLength;
+
+  if (size > 20 * 1024 * 1024) {
+    return json({ error: 'file too large', max: '20MB' }, 413);
+  }
+
+  const ts = now();
+  const key = `${device.id}/${ts}_${label}_${file.name}`;
+
+  const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+  const meta = JSON.stringify({
+    name: file.name,
+    size,
+    type: file.type || 'application/octet-stream',
+    label
   });
+
+  await env.FILES.put(`blob:${key}`, b64);
+  await env.FILES.put(`meta:${key}`, meta);
 
   const result_id = uuid();
   await env.DB.prepare(
     `INSERT INTO results (id, command_id, device_id, data, file_key, created)
      VALUES (?, ?, ?, ?, ?, ?)`
   ).bind(result_id, command_id || null, device.id,
-          JSON.stringify({ file: file.name, size: file.size, label }), key, now()).run();
+          JSON.stringify({ file: file.name, size, label }), key, ts).run();
 
   if (command_id) {
     await env.DB.prepare(
       "UPDATE commands SET status = 'done', done = ? WHERE id = ?"
-    ).bind(now(), command_id).run();
+    ).bind(ts, command_id).run();
   }
 
   const stub = env.DEVICE.get(env.DEVICE.idFromName(device.id));
